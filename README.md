@@ -236,7 +236,7 @@ This project is open source and available under the MIT License.
 ## Support
 
 For support, questions, or feedback, please contact:
-- **Email**: rahulshendre789@gmail.com
+- **Email**: tech@planetread.org
 
 ## Version History
 

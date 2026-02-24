@@ -48,7 +48,10 @@
                         <span class="tooltip">Enter the start time for your subtitle track in HH:MM:SS format.</span>
                     </span>
                 </label>
-                <input type="text" id="startTime" placeholder="00:00:00" pattern="[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}">
+                <div class="time-input-row">
+                    <input type="text" id="startTime" placeholder="00:00:00" pattern="[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}">
+                    <button type="button" class="pickup-time-btn" id="pickupStartTime" title="Set start time from playhead position">Set from playhead</button>
+                </div>
             </div>
             
             <div class="input-group" id="endTimeGroup" style="display: none;">
@@ -57,7 +60,10 @@
                         <span class="tooltip">Enter the end time for your subtitle track in HH:MM:SS format.</span>
                     </span>
                 </label>
-                <input type="text" id="endTime" placeholder="00:05:00" pattern="[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}">
+                <div class="time-input-row">
+                    <input type="text" id="endTime" placeholder="00:05:00" pattern="[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}">
+                    <button type="button" class="pickup-time-btn" id="pickupEndTime" title="Set end time from playhead position">Set from playhead</button>
+                </div>
             </div>
             
             <div class="input-group" id="wordSpacingGroup">

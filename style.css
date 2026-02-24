@@ -261,6 +261,39 @@ input[type="text"][pattern] {
     letter-spacing: 1px;
 }
 
+.time-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.time-input-row input {
+    flex: 0 1 auto;
+    min-width: 100px;
+    max-width: 140px;
+}
+
+.pickup-time-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    font-size: 13px;
+    background: #2d3748;
+    color: #e3e6ea;
+    border: 1.5px solid #3d4a5c;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.pickup-time-btn:hover {
+    border-color: #6ec1ff;
+    background: #23272e;
+}
+
+.pickup-time-btn:active {
+    transform: scale(0.98);
+}
+
 /* Word Spacing */
 .slider-row {
     display: flex;

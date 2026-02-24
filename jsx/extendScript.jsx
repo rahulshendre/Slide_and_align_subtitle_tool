@@ -111,6 +111,33 @@ $.runScript = {
         return isNaN(total) || total < 0 ? null : total;
     },
 
+    // Helper to format seconds as HH:MM:SS (no milliseconds)
+    toHHMMSS: function(timeInSeconds) {
+        var totalSeconds = Math.max(0, Math.floor(timeInSeconds));
+        var seconds = totalSeconds % 60;
+        var totalMinutes = Math.floor(totalSeconds / 60);
+        var minutes = totalMinutes % 60;
+        var hours = Math.floor(totalMinutes / 60);
+        function pad(num, size) {
+            var s = "000" + num;
+            return s.substr(s.length - size);
+        }
+        return pad(hours, 2) + ":" + pad(minutes, 2) + ":" + pad(seconds, 2);
+    },
+
+    // Get current playhead position as HH:MM:SS for auto time pickup (manual mode)
+    getPlayheadTimeFormatted: function() {
+        try {
+            var seq = app.project.activeSequence;
+            if (!seq) return "ERROR: No active sequence.";
+            var pos = seq.getPlayerPosition();
+            if (!pos || typeof pos.seconds !== 'number') return "ERROR: Could not get playhead position.";
+            return this.toHHMMSS(pos.seconds);
+        } catch (e) {
+            return "ERROR: " + (e.message || "Could not get playhead time.");
+        }
+    },
+
     // Main subtitle creation function
     createSubtitlesFromFile: function(filePath, wordSpacing, totalDuration, startTimeOffset) {
         // Utility: get correct file path separator

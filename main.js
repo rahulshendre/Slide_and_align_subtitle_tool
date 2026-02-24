@@ -297,6 +297,48 @@ document.addEventListener('DOMContentLoaded', function() {
             validateTimeInput(this);
         });
     }
+
+    // Auto time pickup from playhead (manual mode)
+    var pickupStartBtn = document.getElementById('pickupStartTime');
+    var pickupEndBtn = document.getElementById('pickupEndTime');
+    var resultDiv = document.getElementById('result');
+
+    function setTimeFromPlayhead(inputEl, resultEl) {
+        if (!inputEl) return;
+        if (!csInterface || typeof csInterface.evalScript !== 'function') {
+            if (resultEl) {
+                resultEl.textContent = 'Premiere Pro connection not available.';
+                resultEl.className = 'error';
+            }
+            return;
+        }
+        csInterface.evalScript('$.runScript.getPlayheadTimeFormatted()', function(result) {
+            if (result && result.indexOf('ERROR:') === 0) {
+                if (resultEl) {
+                    resultEl.textContent = result.replace(/^ERROR:\s*/, '');
+                    resultEl.className = 'error';
+                }
+            } else if (result && /^\d{1,2}:\d{2}:\d{2}$/.test(result)) {
+                inputEl.value = result;
+                validateTimeInput(inputEl);
+                if (resultEl) {
+                    resultEl.textContent = 'Time set from playhead.';
+                    resultEl.className = 'success';
+                }
+            }
+        });
+    }
+
+    if (pickupStartBtn) {
+        pickupStartBtn.addEventListener('click', function() {
+            setTimeFromPlayhead(startTimeInput, resultDiv);
+        });
+    }
+    if (pickupEndBtn) {
+        pickupEndBtn.addEventListener('click', function() {
+            setTimeFromPlayhead(endTimeInput, resultDiv);
+        });
+    }
 });
 
 // Global error handler

@@ -6,6 +6,84 @@ if (!String.prototype.trim) {
     };
 }
 
+// =============================
+// UTF-8 support (binary read + decode; works for all languages)
+// =============================
+function readFileAsBinary(file) {
+    var out = null;
+    try {
+        file.encoding = "BINARY";
+        if (file.open("r")) {
+            out = file.read();
+            file.close();
+        }
+    } catch (e) {
+        try { if (file && file.close) file.close(); } catch (_) {}
+    }
+    return out;
+}
+
+function decodeUTF8(byteString) {
+    if (!byteString || byteString.length === 0) return "";
+    var len = byteString.length;
+    var result = [];
+    var i = 0;
+    var REPLACEMENT = "\uFFFD";
+    if (len >= 3 && (byteString.charCodeAt(0) & 0xFF) === 0xEF &&
+        (byteString.charCodeAt(1) & 0xFF) === 0xBB && (byteString.charCodeAt(2) & 0xFF) === 0xBF) {
+        i = 3;
+    }
+    while (i < len) {
+        var b0 = byteString.charCodeAt(i) & 0xFF;
+        i += 1;
+        if (b0 < 0x80) {
+            result.push(String.fromCharCode(b0));
+            continue;
+        }
+        if (b0 < 0xC2) {
+            result.push(REPLACEMENT);
+            continue;
+        }
+        if (b0 <= 0xDF) {
+            if (i >= len) { result.push(REPLACEMENT); break; }
+            var b1 = byteString.charCodeAt(i) & 0xFF;
+            i += 1;
+            if ((b1 & 0xC0) !== 0x80) { result.push(REPLACEMENT); continue; }
+            result.push(String.fromCharCode(((b0 & 0x1F) << 6) | (b1 & 0x3F)));
+            continue;
+        }
+        if (b0 <= 0xEF) {
+            if (i + 1 >= len) { result.push(REPLACEMENT); break; }
+            var b1 = byteString.charCodeAt(i) & 0xFF;
+            var b2 = byteString.charCodeAt(i + 1) & 0xFF;
+            i += 2;
+            if ((b1 & 0xC0) !== 0x80 || (b2 & 0xC0) !== 0x80) { result.push(REPLACEMENT); continue; }
+            var cp = ((b0 & 0x0F) << 12) | ((b1 & 0x3F) << 6) | (b2 & 0x3F);
+            if (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF)) { result.push(REPLACEMENT); continue; }
+            result.push(String.fromCharCode(cp));
+            continue;
+        }
+        if (b0 <= 0xF4) {
+            if (i + 2 >= len) { result.push(REPLACEMENT); break; }
+            var b1 = byteString.charCodeAt(i) & 0xFF;
+            var b2 = byteString.charCodeAt(i + 1) & 0xFF;
+            var b3 = byteString.charCodeAt(i + 2) & 0xFF;
+            i += 3;
+            if ((b1 & 0xC0) !== 0x80 || (b2 & 0xC0) !== 0x80 || (b3 & 0xC0) !== 0x80) {
+                result.push(REPLACEMENT);
+                continue;
+            }
+            var cp = ((b0 & 0x07) << 18) | ((b1 & 0x3F) << 12) | ((b2 & 0x3F) << 6) | (b3 & 0x3F);
+            if (cp < 0x10000 || cp > 0x10FFFF) { result.push(REPLACEMENT); continue; }
+            cp -= 0x10000;
+            result.push(String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF)));
+            continue;
+        }
+        result.push(REPLACEMENT);
+    }
+    return result.join("");
+}
+
 $.runScript = {
 
     // Helper function to get video duration from active sequence
@@ -186,23 +264,14 @@ $.runScript = {
         }
         
         if (scriptFile && scriptFile.exists) {
-            // Try UTF-16 first (best for all languages)
-            scriptFile.encoding = "UTF-16";
-            if (scriptFile.open("r")) {
-                script = scriptFile.read();
-                scriptFile.close();
+            // UTF-8: read as binary and decode (works for all languages)
+            var rawBytes = readFileAsBinary(scriptFile);
+            if (rawBytes && rawBytes.length > 0) {
+                script = decodeUTF8(rawBytes);
             }
-            // Fallback: Try UTF-8 if UTF-16 fails
-            if (!script) {
-                scriptFile.encoding = "UTF-8";
-                if (scriptFile.open("r")) {
-                    script = scriptFile.read();
-                    scriptFile.close();
-                }
-            }
-            if (!script) {
-                updateEventPanel("Could not read the selected script file. Please save as UTF-16 LE if using non-English text.");
-                return "Could not read the selected script file. Please save as UTF-16 LE if using non-English text.";
+            if (!script || script.length === 0) {
+                updateEventPanel("Could not read the selected script file. Please save your file as UTF-8 (works for all languages).");
+                return "Could not read the selected script file. Please save your file as UTF-8 (works for all languages).";
             }
         } else {
             updateEventPanel("No script file selected or file does not exist.");

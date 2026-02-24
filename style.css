@@ -66,6 +66,7 @@ body {
     background-color: #181c22;
     border-radius: 6px;
     border: 1px solid #2d3748;
+    overflow: visible;
 }
 
 h2 {
@@ -567,14 +568,18 @@ input[type="number"] {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    bottom: 120%;
+    top: 100%;
+    margin-top: 6px;
     background: #23272e;
     color: #e3e6ea;
     padding: 10px 16px;
     border-radius: 7px;
     font-size: 14px;
-    white-space: nowrap;
+    white-space: normal;
+    max-width: 260px;
+    width: max-content;
     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    border: 1px solid #2d3748;
     z-index: 10;
 }
 

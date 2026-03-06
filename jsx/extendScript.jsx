@@ -84,6 +84,32 @@ function decodeUTF8(byteString) {
     return result.join("");
 }
 
+// Read text: try UTF-8 first, then UTF-16 (host decoding; avoids mojibake)
+function readTextFileTolerant(file) {
+    var content = null;
+    try {
+        file.encoding = "UTF-8";
+        if (file.open("r")) {
+            content = file.read();
+            file.close();
+            if (content && content.length > 0) return content;
+        }
+    } catch (e1) {
+        try { if (file && file.close) file.close(); } catch (_) {}
+    }
+    try {
+        file.encoding = "UTF-16";
+        if (file.open("r")) {
+            content = file.read();
+            file.close();
+            if (content && content.length > 0) return content;
+        }
+    } catch (e2) {
+        try { if (file && file.close) file.close(); } catch (_) {}
+    }
+    return null;
+}
+
 $.runScript = {
 
     // Helper function to get video duration from active sequence
@@ -264,14 +290,10 @@ $.runScript = {
         }
         
         if (scriptFile && scriptFile.exists) {
-            // UTF-8: read as binary and decode (works for all languages)
-            var rawBytes = readFileAsBinary(scriptFile);
-            if (rawBytes && rawBytes.length > 0) {
-                script = decodeUTF8(rawBytes);
-            }
+            script = readTextFileTolerant(scriptFile);
             if (!script || script.length === 0) {
-                updateEventPanel("Could not read the selected script file. Please save your file as UTF-8 (works for all languages).");
-                return "Could not read the selected script file. Please save your file as UTF-8 (works for all languages).";
+                updateEventPanel("Could not read the selected script file. Please save your file as UTF-8 or UTF-16 LE.");
+                return "Could not read the selected script file. Please save your file as UTF-8 or UTF-16 LE.";
             }
         } else {
             updateEventPanel("No script file selected or file does not exist.");

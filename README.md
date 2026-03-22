@@ -30,6 +30,7 @@ SlideAndAlignSubtitleTool/
 ├── style.css                # Styling and UI design
 ├── bird_logo.png            # Brand logo (left)
 ├── planetread_logo.png      # Brand logo (right)
+├── DEVELOPER.md             # Architecture and function reference (maintainers)
 └── README.md                # This file
 ```
 
@@ -48,7 +49,7 @@ SlideAndAlignSubtitleTool/
 
 ### Step 2: Copy Extension Folder
 
-Copy the entire `V1` folder (or rename it to `SlideAndAlignSubtitleTool`) to the extensions directory.
+Copy the entire `SlideAndAlignSubtitleTool` folder to the extensions directory.
 
 ### Step 3: Enable Unsigned Extensions (Development Only)
 
@@ -145,7 +146,7 @@ The extension uses a sophisticated word-count-based algorithm:
 
 ### Extension Configuration
 
-- **Bundle ID**: `com.subtitle.tool`
+- **Bundle ID**: `org.planetread.slidealignsubtitletool` (see `CSXS/manifest.xml`)
 - **Version**: 1.0.0
 - **Panel Size**: 400x800 pixels
 - **Auto-Visible**: Yes
@@ -153,28 +154,6 @@ The extension uses a sophisticated word-count-based algorithm:
 ### Temporary Files
 
 SRT files for caption import are created in the system temporary folder (`Folder.temp`) to avoid file permission issues. Files are automatically cleaned up after import.
-
-### ExtendScript Functions
-
-The main ExtendScript functions available in `extendScript.jsx`:
-
-- `runSubtitleWorkflow(timingMode, scriptPath, wordSpacing, startTimeStr, endTimeStr)` - Main workflow function
-- `createSubtitlesFromFile(filePath, wordSpacing, totalDuration, startTimeOffset)` - Creates subtitles from file
-- `getVideoDuration()` - Gets video duration from active sequence
-- `applyWordSpacing(line, spacing)` - Applies word spacing to text
-- `toSRTTime(timeInSeconds)` - Converts seconds to SRT time format
-- `parseTimeToSeconds(timeStr)` - Parses HH:MM:SS to seconds
-
-### JavaScript Interface
-
-The `main.js` file handles:
-- CSInterface initialization
-- File input handling
-- Timing mode toggle (automated/manual)
-- Word spacing controls (slider, input, arrows)
-- Time input validation and formatting
-- Communication between HTML UI and ExtendScript
-- Error handling and user feedback
 
 ## Troubleshooting
 
@@ -214,20 +193,21 @@ The `main.js` file handles:
 
 ## Development
 
-### Building from Source
+See **[DEVELOPER.md](DEVELOPER.md)** for debugging, manifest details, and known follow-ups.
+
+### Building from source
 
 1. Ensure all files are in the correct directory structure
-2. Verify `manifest.xml` points to correct file paths
+2. Verify `CSXS/manifest.xml` points to `./index.html` and `./jsx/extendScript.jsx`
 3. Test in Premiere Pro with unsigned extensions enabled
-4. Check browser console (F12) for JavaScript errors
-5. Check ExtendScript Toolkit for JSX errors
+4. Use CEP remote debugging for the panel (see DEVELOPER.md); check Premiere Events / SDK messages for host feedback
 
 ### Customization
 
-- **Word spacing range**: Modify min/max values in `index.html` and `main.js`
-- **Timing algorithm**: Adjust proportional calculation in `extendScript.jsx`
-- **UI styling**: Edit `style.css` for visual customization
-- **Panel size**: Modify geometry in `manifest.xml`
+- **Word spacing range**: Adjust min/max in `index.html` (and clamp logic in `extendScript.jsx` if needed)
+- **Timing algorithm**: Proportional word-count logic in `createSubtitlesFromFile` inside `extendScript.jsx`
+- **UI styling**: `style.css`
+- **Panel size**: `manifest.xml` geometry
 
 ## License
 

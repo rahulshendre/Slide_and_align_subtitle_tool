@@ -84,29 +84,79 @@ function decodeUTF8(byteString) {
     return result.join("");
 }
 
-// Read text: try UTF-8 first, then UTF-16 (host decoding; avoids mojibake)
+// Read text with BOM sniffing + safe re-open: supports UTF-8 and UTF-16
 function readTextFileTolerant(file) {
-    var content = null;
-    try {
-        file.encoding = "UTF-8";
-        if (file.open("r")) {
-            content = file.read();
-            file.close();
-            if (content && content.length > 0) return content;
-        }
-    } catch (e1) {
-        try { if (file && file.close) file.close(); } catch (_) {}
+    if (!file || !file.exists) {
+        return null;
     }
-    try {
-        file.encoding = "UTF-16";
-        if (file.open("r")) {
-            content = file.read();
-            file.close();
-            if (content && content.length > 0) return content;
+
+    var fsName = file.fsName;
+
+    function sniffEncoding(fsName) {
+        var bin = new File(fsName);
+        var sig = null;
+        try {
+            bin.encoding = "BINARY";
+            if (bin.open("r")) {
+                sig = bin.read(3);
+                bin.close();
+            }
+        } catch (e) {
+            try { bin.close(); } catch (_) {}
         }
-    } catch (e2) {
-        try { if (file && file.close) file.close(); } catch (_) {}
+        if (!sig || sig.length === 0) {
+            return null;
+        }
+        var b0 = sig.charCodeAt(0) & 0xFF;
+        var b1 = sig.length > 1 ? (sig.charCodeAt(1) & 0xFF) : -1;
+        var b2 = sig.length > 2 ? (sig.charCodeAt(2) & 0xFF) : -1;
+
+        if (b0 === 0xEF && b1 === 0xBB && b2 === 0xBF) {
+            return "UTF-8";
+        }
+        if ((b0 === 0xFF && b1 === 0xFE) || (b0 === 0xFE && b1 === 0xFF)) {
+            return "UTF-16";
+        }
+        return null;
     }
+
+    function tryRead(fsName, encoding) {
+        var f = new File(fsName);
+        var content = null;
+        try {
+            f.encoding = encoding;
+            if (f.open("r")) {
+                content = f.read();
+                f.close();
+            }
+        } catch (e) {
+            try { f.close(); } catch (_) {}
+        }
+        if (content && content.length > 0) {
+            return content;
+        }
+        return null;
+    }
+
+    var detected = sniffEncoding(fsName);
+    var encodings = [];
+    if (detected) {
+        encodings.push(detected);
+    }
+    if (detected !== "UTF-8") {
+        encodings.push("UTF-8");
+    }
+    if (detected !== "UTF-16") {
+        encodings.push("UTF-16");
+    }
+
+    for (var i = 0; i < encodings.length; i++) {
+        var content = tryRead(fsName, encodings[i]);
+        if (content) {
+            return content;
+        }
+    }
+
     return null;
 }
 
